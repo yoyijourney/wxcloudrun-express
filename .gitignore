@@ -102,3 +102,33 @@ dist
 
 # TernJS port file
 .tern-port
+
+# 依赖
+node_modules/
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+
+# 构建产物
+dist/
+build/
+
+# 云托管本地调试
+.wxcloud/
