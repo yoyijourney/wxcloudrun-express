@@ -43,7 +43,7 @@ const ROLES = [
         id: "hezhidao",
         name: "何芷舠",
         title: "何园主人",
-        avatar: "cloud://prod-d6gi5zqfmc69ae807.7072-prod-d6gi5zqfmc69ae807-1505513711/avatar-zhuren.png",
+        avatar: "cloud://prod-d6gi5zqfmc69ae807.7072-prod-d6gi5zqfmc69ae807-1505513711/avater-zhuren.png",
         personality: "儒雅、内敛、有士大夫气",
         greeting: "客，欢迎来到寄啸山庄。"
     },
