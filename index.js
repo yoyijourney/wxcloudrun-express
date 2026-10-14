@@ -36,6 +36,69 @@ app.use(cors());
 app.use(logger);
 
 // ============================================
+// 角色列表
+// ============================================
+const ROLES = [
+    {
+        id: "hezhidao",
+        name: "何芷舠",
+        title: "何园主人",
+        avatar: "/images/roles/hezhidao.png",
+        personality: "儒雅、内敛、有士大夫气",
+        greeting: "客，欢迎来到寄啸山庄。"
+    },
+    {
+        id: "hejiada",
+        name: "何家大小姐",
+        title: "何芷舠之女",
+        avatar: "/images/roles/hejiada.png",
+        personality: "温婉、知性、大家闺秀",
+        greeting: "客，请随我来。"
+    },
+    {
+        id: "shitao",
+        name: "石涛",
+        title: "叠石名家",
+        avatar: "/images/roles/shitao.png",
+        personality: "狂放、艺术气、不拘礼节",
+        greeting: "贫僧叠的山，你可看得懂？"
+    }
+];
+
+// ============================================
+// 场景与景点（只存基础信息，讲解词动态生成）
+// ============================================
+const SCENES = [
+    {
+        id: "corridor",
+        name: "复道回廊",
+        panorama: "/images/scenes/corridor.jpg",
+        spots: ["water_pavilion", "pian_shi_shan_fang", "boat_hall"]
+    }
+];
+
+const SPOTS = [
+    {
+        id: "water_pavilion",
+        sceneId: "corridor",
+        name: "水心亭",
+        position: { x: 0.5, y: 0.6 }
+    },
+    {
+        id: "pian_shi_shan_fang",
+        sceneId: "corridor",
+        name: "片石山房",
+        position: { x: 0.3, y: 0.5 }
+    },
+    {
+        id: "boat_hall",
+        sceneId: "corridor",
+        name: "船厅",
+        position: { x: 0.7, y: 0.55 }
+    }
+];
+
+// ============================================
 // 何园知识库
 // ============================================
 const knowledgeBase = {
@@ -133,6 +196,94 @@ app.get("/api/wx_openid", async (req, res) => {
 });
 
 // ============================================
+// 角色列表接口
+// ============================================
+app.get("/api/roles", async (req, res) => {
+    res.json({ code: 0, data: ROLES });
+});
+
+// ============================================
+// 场景接口
+// ============================================
+app.get("/api/scenes", async (req, res) => {
+    res.json({ code: 0, data: SCENES });
+});
+
+// 获取某个场景下的所有景点
+app.get("/api/scenes/:sceneId/spots", async (req, res) => {
+    const { sceneId } = req.params;
+    const spots = SPOTS.filter(s => s.sceneId === sceneId);
+    res.json({ code: 0, data: spots });
+});
+
+// 获取单个景点详情
+app.get("/api/spots/:spotId", async (req, res) => {
+    const { spotId } = req.params;
+    const spot = SPOTS.find(s => s.id === spotId);
+    if (!spot) {
+        return res.status(404).json({ code: -1, msg: "景点不存在" });
+    }
+    res.json({ code: 0, data: spot });
+});
+
+// ============================================
+// 【新增】讲解词生成接口（按 景点 + 角色 动态生成）
+// ============================================
+app.post("/api/narration", async (req, res) => {
+    try {
+        const { spotId, roleId = "hezhidao" } = req.body;
+
+        // 1. 取景点知识
+        const context = getKnowledgeContext(spotId);
+        if (!context) {
+            return res.status(404).json({ code: -1, msg: "景点不存在" });
+        }
+
+        // 2. 取角色提示词
+        const rolePrompt = ROLE_PROMPTS[roleId] || ROLE_PROMPTS.hezhidao;
+
+        // 3. 让角色用自己的口吻介绍这个景点
+        const messages = [
+            {
+                role: "system",
+                content: `${rolePrompt}\n\n${context}\n\n请用你的口吻，向游客介绍这个景点。控制在3句话内。`
+            },
+            {
+                role: "user",
+                content: "请介绍一下这里。"
+            }
+        ];
+
+        const response = await axios.post(
+            "https://api.deepseek.com/chat/completions",
+            {
+                model: "deepseek-chat",
+                messages,
+                temperature: 0.8,
+                max_tokens: 300
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
+                }
+            }
+        );
+
+        const narration = response.data.choices?.[0]?.message?.content || "";
+
+        res.json({
+            code: 0,
+            data: { narration, roleId, spotId }
+        });
+
+    } catch (err) {
+        console.error("narration 接口错误：", err.response?.data || err.message);
+        res.status(500).json({ code: -1, msg: "生成讲解失败" });
+    }
+});
+
+// ============================================
 // AI 问答接口
 // ============================================
 app.post("/api/chat", async (req, res) => {
@@ -143,25 +294,19 @@ app.post("/api/chat", async (req, res) => {
             return res.status(400).json({ code: -1, msg: "question 不能为空" });
         }
 
-        // 1. 获取知识库上下文
         const context = getKnowledgeContext(spotId);
-
-        // 2. 取角色提示词
         const rolePrompt = ROLE_PROMPTS[roleId] || ROLE_PROMPTS.hezhidao;
 
-        // 3. 组装 system prompt
         const systemPrompt = context
             ? `${rolePrompt}\n\n${context}`
             : rolePrompt;
 
-        // 4. 组装 messages
         const messages = [
             { role: "system", content: systemPrompt },
             ...history,
             { role: "user", content: question }
         ];
 
-        // 5. 调用 DeepSeek
         const response = await axios.post(
             "https://api.deepseek.com/chat/completions",
             {
@@ -207,7 +352,6 @@ app.post("/api/tts", async (req, res) => {
 
         const voiceType = ROLE_VOICE_MAP[roleId] || ROLE_VOICE_MAP.hezhidao;
 
-        // 调腾讯云 TTS
         const result = await ttsClient.TextToVoice({
             Text: text,
             SessionId: Date.now().toString(),
@@ -216,11 +360,10 @@ app.post("/api/tts", async (req, res) => {
             SampleRate: 16000
         });
 
-        // 直接返回 base64 音频数据
         res.json({
             code: 0,
             data: {
-                audioBase64: result.Audio,  // 腾讯云返回的本来就是 base64
+                audioBase64: result.Audio,
                 format: "mp3"
             }
         });
