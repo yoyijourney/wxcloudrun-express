@@ -192,9 +192,9 @@ app.post("/api/chat", async (req, res) => {
 // TTS 语音合成接口（直接返回 base64）
 // ============================================
 const ROLE_VOICE_MAP = {
-    hezhidao: 101013,   // 何芷舠 - 智瑞
-    hejiada: 501000,    // 何家大小姐 - 云晓芙
-    shitao: 101011      // 石涛 - 智友
+    hezhidao: 101021,   // 何芷舠 - 智瑞
+    hejiada: 402000,    // 何家大小姐 - 云晓芙
+    shitao: 101054      // 石涛 - 智友
 };
 
 app.post("/api/tts", async (req, res) => {
