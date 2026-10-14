@@ -43,7 +43,7 @@ const ROLES = [
         id: "hezhidao",
         name: "何芷舠",
         title: "何园主人",
-        avatar: "/images/roles/hezhidao.png",
+        avatar: "cloud://prod-d6gi5zqfmc69ae807.7072-prod-d6gi5zqfmc69ae807-1505513711/avatar-zhuren.png",
         personality: "儒雅、内敛、有士大夫气",
         greeting: "客，欢迎来到寄啸山庄。"
     },
@@ -51,7 +51,7 @@ const ROLES = [
         id: "hejiada",
         name: "何家大小姐",
         title: "何芷舠之女",
-        avatar: "/images/roles/hejiada.png",
+        avatar: "cloud://prod-d6gi5zqfmc69ae807.7072-prod-d6gi5zqfmc69ae807-1505513711/avatar.png",
         personality: "温婉、知性、大家闺秀",
         greeting: "客，请随我来。"
     },
@@ -59,7 +59,7 @@ const ROLES = [
         id: "shitao",
         name: "石涛",
         title: "叠石名家",
-        avatar: "/images/roles/shitao.png",
+        avatar: "cloud://prod-d6gi5zqfmc69ae807.7072-prod-d6gi5zqfmc69ae807-1505513711/avatar-sengren.png",
         personality: "狂放、艺术气、不拘礼节",
         greeting: "贫僧叠的山，你可看得懂？"
     }
